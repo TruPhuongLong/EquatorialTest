@@ -26,8 +26,6 @@ function getTwiceIndex(array, total){
 
     array.forEach((item, index) => {
         if(item < total){
-            // array1.push(item)
-            // array2.push(total - item)
             newArray.push({
                 n1: item,
                 _n1: total - item,
@@ -40,9 +38,9 @@ function getTwiceIndex(array, total){
     if(newArray.length <= 0) return null;
 
 
-
     //step2: compare array 2 (_n1) with original array
-    newArray.forEach(({n1, _n1, index}) => {
+    for (let i = 0; i < newArray.length; i++) {
+        const {n1, _n1, index} = newArray[i]
 
         // note this is lastIndexOf, not indexOf, it will helpfull for compare
         let _index = array.lastIndexOf(_n1)
@@ -52,15 +50,20 @@ function getTwiceIndex(array, total){
             if(n1 === _n1){
                 if(index !== _index){
                     // good result:
-                    return (index, _index)
+                    return {n1: index, _n1: _index}
                 }
             }else{
                 // good result:
-                return (index, _index)
+                return {n1: index, _n1: _index}
             }
         }
-    })
+
+    }
 
     return null
 
 }
+
+let array = [11, 2, 7, 15], t = 9
+let result = getTwiceIndex(array, t)
+console.log(result)
