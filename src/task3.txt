@@ -1,0 +1,29 @@
+Theory Problems:
+Question:
+In your own words, provide short answers to the following topics on your understanding of them and
+how would you use them in a product development environment.
+1. Version control (Git)
+2. QA / Testing
+3. Security
+4. HTML, CSS, JavaScript
+5. RESTful, Frontend Frameworks and other web services (e.g. Google Map API)
+
+Answer:
+1.Git: 
+- save my code , i can code anywhere, any device, not need copy to USB for each time i work on other device.
+- it save code on each time develop, then when some thing went wrong, i can come back old version.
+- on team work enviroment, it help member work good together, each member will develop on each task, then merger in one.
+- it can using to deploy to real word, example can git push heroku.
+2.QA/Testing:
+- it ensure code run correct in all case, test case especialy in pure code, when something went wrong, it help find bug more easy.
+- some tool: mocha, chai, supertest
+3. Security:
+it prevent hacker, 
+example 1:  in form user input, we need validate data cafuly, it prevent some macilious code, some script code, not good for software. 
+example 2: when save user infomation (password), we need encrypt for security.
+4. HTML, CSS, Javascript:
+-HTML: is bone
+-CSS: is skin
+-Javascript: dynamic web page, do logic, script, beside, javascript can do with dom and change html, css.
+5:  RESTful, Frontend Frameworks and other web services (e.g. Google Map API)
+in development, we need some api (do with database), then we can create one server (node.js), it will response api endpoint, then from front end, we request via endpoint, then get data, we can have CRUD action...
