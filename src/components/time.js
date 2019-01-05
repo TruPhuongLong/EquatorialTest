@@ -1,8 +1,11 @@
 import React from 'react'
 
+import {setCalendars, getCalendars} from '../services/localStorage'
+import {isSameDate, calDayOfWeeks, isShowCalendars} from '../services/funcHelp'
+
 export default class Time extends React.Component {
 
-    state = {
+    initState = {
         fields: {
             year: (new Date()).getFullYear(),
             month: (new Date().getMonth()),
@@ -13,18 +16,22 @@ export default class Time extends React.Component {
         isShowCalendars: false
     }
 
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',] // 0, 1..., 11
+    dayOfWeekTemplate = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] // 1, 2, 3, 4, 5 ,6, 0
+    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
+    state = this.initState
 
     componentDidMount() {
         const activeDate = this.state.fields.activeDate
-        const dayOfWeeks = this.calDayOfWeeks(activeDate)
+        const dayOfWeeks = calDayOfWeeks(activeDate)
 
         // check for show calendar or not:
-        const result = this.isShowCalendars(dayOfWeeks)
+        const result = isShowCalendars(activeDate)
         console.log('is show calendar: ', result)
 
         if (result) {
-            const calendars = this.getCalendars()
+            const calendars = getCalendars()
             console.dir(calendars)
             this.setState({
                 fields: calendars,
@@ -56,11 +63,15 @@ export default class Time extends React.Component {
     onInputNoteChanged = (hour, event) => {
         const value = event.target.value
         const notes = this.state.fields.notes
+        const isShowCalendar = this.state.isShowCalendars
+
+        console.log(hour, value)
 
         // check hour in note or not:
         const notesHour = notes.map(item => item.hour)
-        if (notesHour.indexOf(hour) !== -1) {
+        if (isShowCalendars && notesHour.indexOf(hour) !== -1) {
             // edit child of notes already exists
+            console.log('here')
             notes.forEach(item => {
                 if (item.hour === hour) {
                     item.content = value
@@ -68,6 +79,7 @@ export default class Time extends React.Component {
             })
         } else {
             // push new note
+            console.log('go here')
             notes.push({ hour, content: value })
         }
 
@@ -80,39 +92,11 @@ export default class Time extends React.Component {
         }))
     }
 
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',] // 0, 1..., 11
-    dayOfWeekTemplate = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] // 1, 2, 3, 4, 5 ,6, 0
-    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
-    // return array of days in one week
-    calDayOfWeeks = (date) => {
-        let startDate = new Date(date)
-        const currentDay = date.getDay()
-
-        //get startDate: monday
-        if (currentDay === 0) {
-            startDate.setDate(startDate.getDate() - 6);
-        } else {
-            startDate.setDate(startDate.getDate() - currentDay + 1);
-        }
-
-        // return array
-        let arrayDates = []
-        for (let i = 0; i <= 6; i++) {
-            arrayDates.push((new Date(startDate)).setDate(startDate.getDate() + i))
-        }
-
-        return arrayDates;
-    }
-
-    isSameDate = (date1, date2) => {
-        const d1 = new Date(date1)
-        const d2 = new Date(date2)
-        return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate()
-    }
-
-    setActiveDate = (activeDate, _dayOfWeeks) => {
+    updateState = (activeDate, _dayOfWeeks) => {
         const dayOfWeeks = _dayOfWeeks || this.state.fields.dayOfWeeks
+        const _isShowCalendars = isShowCalendars(activeDate)
+        console.log(_isShowCalendars)
         this.setState(state => ({
             fields: {
                 ...state.fields,
@@ -120,7 +104,8 @@ export default class Time extends React.Component {
                 month: (new Date(activeDate)).getMonth(),
                 activeDate: new Date(activeDate),
                 dayOfWeeks
-            }
+            },
+            isShowCalendars: _isShowCalendars
         }))
     }
 
@@ -137,45 +122,50 @@ export default class Time extends React.Component {
 
         //get range dateOfWeeks:
         console.log(activeDate)
-        const dayOfWeeks = this.calDayOfWeeks(activeDate)
-        this.setActiveDate(activeDate, dayOfWeeks)
+        const _dayOfWeeks = calDayOfWeeks(activeDate)
+
+        // check isShowCalendar or not
+        const _isShowCalendars = isShowCalendars(activeDate)
+
+        // update state
+        this.updateState(activeDate, _dayOfWeeks, _isShowCalendars)
     }
 
     saveCalendars = () => {
-        console.dir(this.state.fields)
         const calendars = this.state.fields
-        localStorage.setItem('calendars', JSON.stringify(calendars))
+        setCalendars(calendars)
     }
 
-    getCalendars = () => {
-        const calendarsString = localStorage.getItem('calendars')
-        const calendars = JSON.parse(calendarsString)
-        return calendars
-    }
-
-    isShowCalendars = (_dayOfWeeks) => {
-        const calendars = this.getCalendars()
-        if (!calendars) return false
-        const dayOfWeeks = calendars.dayOfWeeks
-        return this.isSameDate(_dayOfWeeks[0], dayOfWeeks[0])
-    }
+    
 
     fillNoteContent = () => {
-        console.log('=== go here')
         const notes = this.state.fields.notes
 
         notes.forEach(item => {
             if (item.content !== '') {
-                console.log(item.content, item.hour)
-                console.dir(this[`input-${item.hour}`])
                 this[`input-${item.hour}`].value = item.content
             }
         })
+    }
 
+    getNoteContent = (index) => {
+        const notes = this.state.fields.notes
+        let content = ''
+
+        notes.every(item => {
+            console.log(item.hour, item.content)
+            if (item.hour === index) {
+                content = item.content
+
+            }
+        })
+
+        return content
     }
 
     render() {
-        const { year, month, activeDate, dayOfWeeks } = this.state.fields
+        const { year, month, activeDate, dayOfWeeks, notes } = this.state.fields
+        const {isShowCalendars} = this.state
         console.log(activeDate)
         return (
             <div>
@@ -209,8 +199,8 @@ export default class Time extends React.Component {
                                     return (
                                         <td
                                             key={index}
-                                            className={`${this.isSameDate(date, new Date()) ? "current-date" : (this.isSameDate(date, activeDate) ? "date-active" : null)} pointer`}
-                                            onClick={() => this.setActiveDate(date)}>
+                                            className={`${isSameDate(date, new Date()) ? "current-date" : (isSameDate(date, activeDate) ? "date-active" : null)} pointer`}
+                                            onClick={() => this.updateState(date)}>
                                             {(new Date(date)).getDate()}
                                         </td>
                                     )
@@ -235,7 +225,8 @@ export default class Time extends React.Component {
                                             type="text"
                                             className="form-control"
                                             onChange={(event) => this.onInputNoteChanged(index, event)}
-                                            ref={input => this[`input-${index}`] = input} />
+                                            ref={input => this[`input-${index}`] = input} 
+                                            value={this.getNoteContent(index)}/>
                                     </td>
                                 </tr>
                             ))
