@@ -8,19 +8,38 @@ export default class Time extends React.Component {
             month: (new Date().getMonth()),
             activeDate: new Date(),
             dayOfWeeks: [],
-            hour: 0
+            notes: [] //note: [{hour: 0, content: ''}]
         },
+        isShowCalendars: false
     }
+
+
 
     componentDidMount() {
         const activeDate = this.state.fields.activeDate
         const dayOfWeeks = this.calDayOfWeeks(activeDate)
-        this.setState(state => ({
-            fields: {
-                ...state.fields,
-                dayOfWeeks
-            }
-        }))
+
+        // check for show calendar or not:
+        const result = this.isShowCalendars(dayOfWeeks)
+        console.log('is show calendar: ', result)
+
+        if (result) {
+            const calendars = this.getCalendars()
+            console.dir(calendars)
+            this.setState({
+                fields: calendars,
+                isShowCalendars: true
+            }, 
+                this.fillNoteContent
+            )
+        } else {
+            this.setState(state => ({
+                fields: {
+                    ...state.fields,
+                    dayOfWeeks
+                }
+            }))
+        }
     }
 
     onInputChanged = (event) => {
@@ -34,9 +53,36 @@ export default class Time extends React.Component {
         }))
     }
 
+    onInputNoteChanged = (hour, event) => {
+        const value = event.target.value
+        const notes = this.state.fields.notes
+
+        // check hour in note or not:
+        const notesHour = notes.map(item => item.hour)
+        if (notesHour.indexOf(hour) !== -1) {
+            // edit child of notes already exists
+            notes.forEach(item => {
+                if (item.hour === hour) {
+                    item.content = value
+                }
+            })
+        } else {
+            // push new note
+            notes.push({ hour, content: value })
+        }
+
+        // update state
+        this.setState(state => ({
+            fields: {
+                ...state.fields,
+                notes
+            }
+        }))
+    }
+
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',] // 0, 1..., 11
     dayOfWeekTemplate = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] // 1, 2, 3, 4, 5 ,6, 0
-    hours = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23']
+    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
     // return array of days in one week
     calDayOfWeeks = (date) => {
@@ -95,8 +141,41 @@ export default class Time extends React.Component {
         this.setActiveDate(activeDate, dayOfWeeks)
     }
 
+    saveCalendars = () => {
+        console.dir(this.state.fields)
+        const calendars = this.state.fields
+        localStorage.setItem('calendars', JSON.stringify(calendars))
+    }
+
+    getCalendars = () => {
+        const calendarsString = localStorage.getItem('calendars')
+        const calendars = JSON.parse(calendarsString)
+        return calendars
+    }
+
+    isShowCalendars = (_dayOfWeeks) => {
+        const calendars = this.getCalendars()
+        if (!calendars) return false
+        const dayOfWeeks = calendars.dayOfWeeks
+        return this.isSameDate(_dayOfWeeks[0], dayOfWeeks[0])
+    }
+
+    fillNoteContent = () => {
+        console.log('=== go here')
+        const notes = this.state.fields.notes
+
+        notes.forEach(item => {
+            if (item.content !== '') {
+                console.log(item.content, item.hour)
+                console.dir(this[`input-${item.hour}`])
+                this[`input-${item.hour}`].value = item.content
+            }
+        })
+
+    }
+
     render() {
-        const { year, month, activeDate, dayOfWeeks, hour } = this.state.fields
+        const { year, month, activeDate, dayOfWeeks } = this.state.fields
         console.log(activeDate)
         return (
             <div>
@@ -107,10 +186,10 @@ export default class Time extends React.Component {
                         }
                     </select>
                     <input type="number" value={year} onChange={this.onInputChanged} name="year" className="form-control" />
-                    <button>Save</button>
+                    <button className="btn btn-success" onClick={this.saveCalendars}>Save</button>
                 </div>
 
-                <table style={{textAlign: 'center' }}>
+                <table style={{ textAlign: 'center' }}>
                     <thead>
                         <tr>
                             <th></th>
@@ -123,7 +202,7 @@ export default class Time extends React.Component {
                     <tbody>
                         <tr>
                             <td>
-                                <button onClick={() => this.updateDayOfWeeks('-')} className="pointer"><i className="fas fa-angle-left"></i></button>
+                                <button onClick={() => this.updateDayOfWeeks('-')} className="btn"><i className="fas fa-angle-left"></i></button>
                             </td>
                             {
                                 dayOfWeeks.map((date, index) => {
@@ -138,7 +217,7 @@ export default class Time extends React.Component {
                                 })
                             }
                             <td>
-                                <button onClick={() => this.updateDayOfWeeks('+')} className="pointer"><i className="fas fa-angle-right"></i></button>
+                                <button onClick={() => this.updateDayOfWeeks('+')} className="btn"><i className="fas fa-angle-right"></i></button>
                             </td>
                         </tr>
                     </tbody>
@@ -152,7 +231,11 @@ export default class Time extends React.Component {
                                         {item}
                                     </td>
                                     <td>
-                                        <input type="text" className="form-control"/>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            onChange={(event) => this.onInputNoteChanged(index, event)}
+                                            ref={input => this[`input-${index}`] = input} />
                                     </td>
                                 </tr>
                             ))
@@ -163,3 +246,4 @@ export default class Time extends React.Component {
         )
     }
 }
+
