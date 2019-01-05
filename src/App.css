@@ -1,5 +1,6 @@
 :root{
-    --color-green: green;
+    --color-white: white;
+    --color-gray: rgb(240, 233, 233);
   }
   
   @media screen and (min-width: 768px) {
@@ -7,14 +8,46 @@
   }
   
   body {
-    background-color: var(--color-white-50);
+    background-color: var(--color-white);
   }
+
+
+.App{
+    width: 80%;
+    margin: auto;
+}
 
 .flex-horizontal{
     display: flex;
     flex-direction: row;
 }
 
-.dayActive{
+.date-active{
+    border: 1px solid gray;
+}
+
+.current-date{
     background-color: green;
+}
+
+.pointer:hover{
+    cursor: pointer;
+}
+
+.form-control{
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+table{
+    width: 100%;
+}
+
+tr{
+    height: 40px;
+}
+
+.tr-hover:hover{
+    background-color: var(--color-gray);
 }
