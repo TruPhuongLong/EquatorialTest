@@ -6,10 +6,9 @@ const isSameDate = (date1, date2) => {
     return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate()
 }
 
-// return array of days in one week
-const calDayOfWeeks = (date) => {
-    let startDate = new Date(date)
-    const currentDay = date.getDay()
+// return array of days in one week, input is type Date.
+const calDayOfWeeks = (startDate) => {
+    const currentDay = startDate.getDay()
 
     //get startDate: monday
     if (currentDay === 0) {
@@ -21,21 +20,22 @@ const calDayOfWeeks = (date) => {
     // return array
     let arrayDates = []
     for (let i = 0; i <= 6; i++) {
-        arrayDates.push((new Date(startDate)).setDate(startDate.getDate() + i))
+        const copyStartDate = new Date(startDate)
+        const d = new Date(copyStartDate.setDate(copyStartDate.getDate() + i))
+        arrayDates.push(d)
     }
 
     return arrayDates;
 }
 
-const isShowCalendars = (activeDate) => {
-    const calendars = getCalendars()
-    if (!calendars) return false
-    const _activeDate = calendars.activeDate
-    return isSameDate(activeDate, _activeDate)
-}
+// const isShowCalendars = (activeDate) => {
+//     const calendars = getCalendars()
+//     if (!calendars) return false
+//     const _activeDate = calendars.activeDate
+//     return isSameDate(activeDate, _activeDate)
+// }
 
 export {
     isSameDate,
     calDayOfWeeks,
-    isShowCalendars
 }

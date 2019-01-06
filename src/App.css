@@ -23,10 +23,6 @@
 }
 
 .date-active{
-    border: 1px solid gray;
-}
-
-.current-date{
     background-color: green;
 }
 

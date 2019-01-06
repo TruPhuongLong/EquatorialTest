@@ -1,172 +1,170 @@
 import React from 'react'
 
-import {setCalendars, getCalendars} from '../services/localStorage'
-import {isSameDate, calDayOfWeeks, isShowCalendars} from '../services/funcHelp'
+import { setCalendars, getCalendars } from '../services/localStorage'
+import { isSameDate, calDayOfWeeks } from '../services/funcHelp'
 
 export default class Time extends React.Component {
 
-    initState = {
-        fields: {
-            year: (new Date()).getFullYear(),
-            month: (new Date().getMonth()),
-            activeDate: new Date(),
-            dayOfWeeks: [],
-            notes: [] //note: [{hour: 0, content: ''}]
-        },
-        isShowCalendars: false
-    }
-
+    // CONST
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',] // 0, 1..., 11
     dayOfWeekTemplate = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] // 1, 2, 3, 4, 5 ,6, 0
-    hours = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    notes = [
+        { hour: 0, content: '' },
+        { hour: 1, content: '' },
+        { hour: 2, content: '' },
+        { hour: 3, content: '' },
+        { hour: 4, content: '' },
+        { hour: 5, content: '' },
+        { hour: 6, content: '' },
+        { hour: 7, content: '' },
+        { hour: 8, content: '' },
+        { hour: 9, content: '' },
+        { hour: 10, content: '' },
+        { hour: 11, content: '' },
+        { hour: 12, content: '' },
+        { hour: 13, content: '' },
+        { hour: 14, content: '' },
+        { hour: 15, content: '' },
+        { hour: 16, content: '' },
+        { hour: 17, content: '' },
+        { hour: 18, content: '' },
+        { hour: 19, content: '' },
+        { hour: 20, content: '' },
+        { hour: 21, content: '' },
+        { hour: 22, content: '' },
+        { hour: 23, content: '' },
+    ]
 
-    state = this.initState
+    // init state
+    initState = (date, _notes) => ({
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        date: date.getDate(),
+        dayOfWeeks: calDayOfWeeks(date),
+        notes: _notes || this.notes //note: [{hour: 0, content: ''}, ...]
 
-    componentDidMount() {
-        const activeDate = this.state.fields.activeDate
-        const dayOfWeeks = calDayOfWeeks(activeDate)
+    })
 
-        // check for show calendar or not:
-        const result = isShowCalendars(activeDate)
-        console.log('is show calendar: ', result)
+    // input date => get activeCalendar or not
+    getActiveCalendarWithDate(inputDate) {
+        // inputDate can be type: Date or pass state is ok too.
+        if (!(inputDate instanceof Date)) {
+            const { year, month, date } = inputDate
+            inputDate = new Date(year, month, date)
+        }
 
-        if (result) {
-            const calendars = getCalendars()
-            console.dir(calendars)
-            this.setState({
-                fields: calendars,
-                isShowCalendars: true
-            }, 
-                this.fillNoteContent
-            )
-        } else {
-            this.setState(state => ({
-                fields: {
-                    ...state.fields,
-                    dayOfWeeks
+        // get array calendars from localStorage
+        const calendars = getCalendars()
+        console.log('=== getCalendars at getActiveCalendarWithDate: ', calendars)
+        let activeCalendar = null
+
+        if (calendars && calendars.length >= 0) {
+            calendars.forEach(calendar => {
+                const { year, month, date } = Object.values(calendar)[0]
+                const calendarDate = new Date(year, month, date)
+                if (isSameDate(inputDate, calendarDate)){
+                    activeCalendar = calendar
                 }
-            }))
+            })
+        }
+
+        return activeCalendar
+    }
+
+    constructor(props) {
+        super(props)
+
+        // check today is contain calendar or not
+        let activeCalendar = this.getActiveCalendarWithDate(new Date())
+        if (activeCalendar) {
+            this.state = activeCalendar
+        } else {
+            this.state = this.initState(new Date())
         }
     }
 
+    // update value when change: month, year
     onInputChanged = (event) => {
         const name = event.target.name
         const value = event.target.value
-        this.setState(state => ({
-            fields: {
-                ...state.fields,
-                [name]: value
-            }
-        }))
+
+        const newState = { ...this.state, [name]: value }
+        console.log(newState)
+
+        this.updateState(newState, name)
     }
 
-    onInputNoteChanged = (hour, event) => {
+    // call when typping input note
+    onInputNoteChanged = (index, event) => {
+        const notes = this.state.notes
         const value = event.target.value
-        const notes = this.state.fields.notes
-        const isShowCalendar = this.state.isShowCalendars
 
-        console.log(hour, value)
-
-        // check hour in note or not:
-        const notesHour = notes.map(item => item.hour)
-        if (isShowCalendars && notesHour.indexOf(hour) !== -1) {
-            // edit child of notes already exists
-            console.log('here')
-            notes.forEach(item => {
-                if (item.hour === hour) {
-                    item.content = value
-                }
-            })
-        } else {
-            // push new note
-            console.log('go here')
-            notes.push({ hour, content: value })
+        for(let i = 0; i < notes.length; i++){
+            if(notes[i].hour === index){
+                notes[i].content = value
+                break
+            }   
         }
 
-        // update state
-        this.setState(state => ({
-            fields: {
-                ...state.fields,
-                notes
+        this.setState({
+            notes
+        })
+    }
+
+    // click to each date (1-31) or arrow previus or next : will trigger this func
+    onDateChange = (_date) => {
+        let newState
+        if (_date instanceof Date) {
+            newState = { ...this.state, year: _date.getFullYear(), month: _date.getMonth(), date: _date.getDate() }
+
+        } else {
+            const { year, month, date } = this.state
+            const newDate = new Date(year, month, date)
+            if (_date === '-') {
+                newDate.setDate(newDate.getDate() - 7)
+            } else {
+                newDate.setDate(newDate.getDate() + 7)
             }
-        }))
-    }
+            console.log('newDate ', newDate)
 
-
-    updateState = (activeDate, _dayOfWeeks) => {
-        const dayOfWeeks = _dayOfWeeks || this.state.fields.dayOfWeeks
-        const _isShowCalendars = isShowCalendars(activeDate)
-        console.log(_isShowCalendars)
-        this.setState(state => ({
-            fields: {
-                ...state.fields,
-                year: (new Date(activeDate)).getFullYear(),
-                month: (new Date(activeDate)).getMonth(),
-                activeDate: new Date(activeDate),
-                dayOfWeeks
-            },
-            isShowCalendars: _isShowCalendars
-        }))
-    }
-
-    updateDayOfWeeks = (symbol) => {
-        //copy activeDate
-        const activeDate = new Date(this.state.fields.activeDate)
-
-        // check symbol
-        if (symbol === '-') {
-            activeDate.setDate(activeDate.getDate() - 7)
-        } else {
-            activeDate.setDate(activeDate.getDate() + 7)
+            newState = { ...this.state, year: newDate.getFullYear(), month: newDate.getMonth(), date: newDate.getDate() }
+            console.log('new State ', newState)
         }
 
-        //get range dateOfWeeks:
-        console.log(activeDate)
-        const _dayOfWeeks = calDayOfWeeks(activeDate)
-
-        // check isShowCalendar or not
-        const _isShowCalendars = isShowCalendars(activeDate)
-
-        // update state
-        this.updateState(activeDate, _dayOfWeeks, _isShowCalendars)
+        this.updateState(newState, 'date')
     }
 
+    // update new state when change activeDate
+    updateState = (newState, keyChange) => {
+        // check today is contain calendar or not
+        const { year, month, date } = newState
+        const currentDate = new Date(year, month, date)
+        let activeCalendar = this.getActiveCalendarWithDate(currentDate)
+
+        if (activeCalendar) {
+            newState = Object.values(activeCalendar)[0]
+        } else {
+            // if change month, we need reset range dayOfWeek, each month have difference number of days.
+            if (keyChange === 'month') {
+                newState.date = 1 //reset to first day of month
+            }
+
+            newState.dayOfWeeks = calDayOfWeeks(currentDate)
+            newState.notes = this.notes
+        }
+
+        this.setState(newState)
+    }
+
+    // save calendar.
     saveCalendars = () => {
-        const calendars = this.state.fields
-        setCalendars(calendars)
+        const calendar = this.state
+        setCalendars(calendar)
     }
 
-    
-
-    fillNoteContent = () => {
-        const notes = this.state.fields.notes
-
-        notes.forEach(item => {
-            if (item.content !== '') {
-                this[`input-${item.hour}`].value = item.content
-            }
-        })
-    }
-
-    getNoteContent = (index) => {
-        const notes = this.state.fields.notes
-        let content = ''
-
-        notes.every(item => {
-            console.log(item.hour, item.content)
-            if (item.hour === index) {
-                content = item.content
-
-            }
-        })
-
-        return content
-    }
 
     render() {
-        const { year, month, activeDate, dayOfWeeks, notes } = this.state.fields
-        const {isShowCalendars} = this.state
-        console.log(activeDate)
+        const { year, month, date, dayOfWeeks, notes } = this.state
         return (
             <div>
                 <div className="flex-horizontal">
@@ -192,22 +190,23 @@ export default class Time extends React.Component {
                     <tbody>
                         <tr>
                             <td>
-                                <button onClick={() => this.updateDayOfWeeks('-')} className="btn"><i className="fas fa-angle-left"></i></button>
+                                <button onClick={() => this.onDateChange('-')} className="btn"><i className="fas fa-angle-left"></i></button>
                             </td>
                             {
-                                dayOfWeeks.map((date, index) => {
+                                dayOfWeeks.map((dayOfWeek, index) => {
                                     return (
                                         <td
                                             key={index}
-                                            className={`${isSameDate(date, new Date()) ? "current-date" : (isSameDate(date, activeDate) ? "date-active" : null)} pointer`}
-                                            onClick={() => this.updateState(date)}>
-                                            {(new Date(date)).getDate()}
+                                            className={`${isSameDate((new Date(dayOfWeek)), new Date(year, month, date)) ? "date-active" : null} pointer`}
+                                            onClick={() => this.onDateChange((new Date(dayOfWeek)))}
+                                        >
+                                            {(new Date(dayOfWeek)).getDate()}
                                         </td>
                                     )
                                 })
                             }
                             <td>
-                                <button onClick={() => this.updateDayOfWeeks('+')} className="btn"><i className="fas fa-angle-right"></i></button>
+                                <button onClick={() => this.onDateChange('+')} className="btn"><i className="fas fa-angle-right"></i></button>
                             </td>
                         </tr>
                     </tbody>
@@ -215,18 +214,18 @@ export default class Time extends React.Component {
                 <table>
                     <tbody>
                         {
-                            this.hours.map((item, index) => (
+                            notes.map(({ hour, content }, index) => (
                                 <tr key={index} className="tr-hover" >
                                     <td>
-                                        {item}
+                                        {hour}
                                     </td>
                                     <td>
                                         <input
                                             type="text"
                                             className="form-control"
                                             onChange={(event) => this.onInputNoteChanged(index, event)}
-                                            ref={input => this[`input-${index}`] = input} 
-                                            value={this.getNoteContent(index)}/>
+                                            value={content}
+                                        />
                                     </td>
                                 </tr>
                             ))
