@@ -51,7 +51,7 @@ export default class Time extends React.Component {
     constructor(props) {
         super(props)
 
-        localStorage.setItem('calendars', null)
+        // localStorage.setItem('calendars', null)
 
         // check today is contain calendar or not
         let activeCalendar = getActiveCalendarWithDate(new Date())
