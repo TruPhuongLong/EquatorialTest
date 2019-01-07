@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { setCalendars, getCalendars } from '../services/localStorage'
-import { isSameDate, calDayOfWeeks } from '../services/funcHelp'
+import { isSameDate, calDayOfWeeks, startTimer, getActiveCalendarWithDate } from '../services/funcHelp'
 
 export default class Time extends React.Component {
 
@@ -45,42 +45,26 @@ export default class Time extends React.Component {
 
     })
 
-    // input date => get activeCalendar or not
-    getActiveCalendarWithDate(inputDate) {
-        // inputDate can be type: Date or pass state is ok too.
-        if (!(inputDate instanceof Date)) {
-            const { year, month, date } = inputDate
-            inputDate = new Date(year, month, date)
-        }
 
-        // get array calendars from localStorage
-        const calendars = getCalendars()
-        console.log('=== getCalendars at getActiveCalendarWithDate: ', calendars)
-        let activeCalendar = null
 
-        if (calendars && calendars.length >= 0) {
-            calendars.forEach(calendar => {
-                const { year, month, date } = Object.values(calendar)[0]
-                const calendarDate = new Date(year, month, date)
-                if (isSameDate(inputDate, calendarDate)){
-                    activeCalendar = calendar
-                }
-            })
-        }
-
-        return activeCalendar
-    }
+    
 
     constructor(props) {
         super(props)
 
         // check today is contain calendar or not
-        let activeCalendar = this.getActiveCalendarWithDate(new Date())
+        let activeCalendar = getActiveCalendarWithDate(new Date())
         if (activeCalendar) {
-            this.state = activeCalendar
+            this.state = Object.values(activeCalendar)[0]
         } else {
             this.state = this.initState(new Date())
         }
+
+        this.idTimer = startTimer(60, this.notification)
+    }
+
+    componentWillUnmount(){
+        clearTimeout(this.idTimer)
     }
 
     // update value when change: month, year
@@ -139,7 +123,7 @@ export default class Time extends React.Component {
         // check today is contain calendar or not
         const { year, month, date } = newState
         const currentDate = new Date(year, month, date)
-        let activeCalendar = this.getActiveCalendarWithDate(currentDate)
+        let activeCalendar = getActiveCalendarWithDate(currentDate)
 
         if (activeCalendar) {
             newState = Object.values(activeCalendar)[0]
@@ -162,9 +146,18 @@ export default class Time extends React.Component {
         setCalendars(calendar)
     }
 
+    // notification: event have shape: {time: .., message: ''}
+    notification = ({time, message}) => {
+        window.alert( `calendar: ${message}`)
+    }
+
+
+    
+
 
     render() {
         const { year, month, date, dayOfWeeks, notes } = this.state
+        console.log('dayOfWeeks ', dayOfWeeks)
         return (
             <div>
                 <div className="flex-horizontal">
