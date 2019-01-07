@@ -3,8 +3,20 @@
 // }
 
 const setCalendars = (calendar) => {
+
+    // check calendar empty:
+    let isEmpty = true
+    const {notes} = calendar
+    notes.forEach(note => {
+        //note have shape: { hour: 0, content: '' }
+        const {hour, content} = note
+        if(content){
+            isEmpty = false
+        }
+    })
+    if (isEmpty) return
+
     const calendars = getCalendars() || []   
-    console.log('===old calendars :' , calendars)
     let isEdit = false
 
     for(let i = 0; i < calendars.length; i++){
@@ -24,14 +36,12 @@ const setCalendars = (calendar) => {
         calendars.push({[key]: calendar})
     }
    
-    console.log('===new calendars ', calendars)
-
     localStorage.setItem('calendars', JSON.stringify(calendars))
 }
 
 const getCalendars = () => {
     const calendarsString = localStorage.getItem('calendars')
-    if(!calendarsString) return null
+    // if(!calendarsString) return null
     const calendars = JSON.parse(calendarsString)
     return calendars
 }

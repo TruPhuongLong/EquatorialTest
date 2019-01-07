@@ -1,4 +1,4 @@
-import {getCalendars} from './localStorage'
+import { getCalendars } from './localStorage'
 
 const isSameDate = (date1, date2) => {
     const d1 = new Date(date1)
@@ -36,14 +36,14 @@ const getCalendarForNextNDays = (n) => {
 
     // get date: time = now + n => for calculate timer
     const dateForTimer = new Date()
-    dateForTimer.setDate(dateForTimer.getDate() + n ) // increment dateForTimer n days. 
+    dateForTimer.setDate(dateForTimer.getDate() + n) // increment dateForTimer n days. 
 
     if (calendars && calendars.length >= 0) {
         calendars.forEach(calendar => {
             // calendar have shape: {'2018-01-02': {year: ..., month: ....}}
             const { year, month, date } = Object.values(calendar)[0]
             const calendarDate = new Date(year, month, date)
-            if (calendarDate <= dateForTimer){
+            if (calendarDate <= dateForTimer) {
                 calendarForTimers.push(calendar)
             }
         })
@@ -55,46 +55,46 @@ const getCalendarForNextNDays = (n) => {
 const getEvents = (calendars) => {
     const events = []
     calendars.forEach(calendar => {
-         const {year, month, date, notes} = Object.values(calendar)[0]
-         notes.forEach(note => {
-             //note have shape: { hour: 0, content: '' }
-             const {hour, content} = note
-             if(content){
-                 const event = {
-                     time: new Date(year, month, date, hour),
-                     message: content
-                 }
-                 events.push(event)
-             }
-         })
-     })
-     return events
+        const { year, month, date, notes } = Object.values(calendar)[0]
+        notes.forEach(note => {
+            //note have shape: { hour: 0, content: '' }
+            const { hour, content } = note
+            if (content) {
+                const event = {
+                    time: new Date(year, month, date, hour),
+                    message: content
+                }
+                events.push(event)
+            }
+        })
+    })
+    return events
 }
 
 //timer: input _calendarForTimers is array of calendar, will callback when time reach :input minutes
 const startTimer = (minutes, cb) => {
     // get calendar timer for today and next 2 days
-    const calendarForTimers = getCalendarForNextNDays(2) 
-    if(!calendarForTimers || calendarForTimers.length <= 0) return null
+    const calendarForTimers = getCalendarForNextNDays(2)
+    if (!calendarForTimers || calendarForTimers.length <= 0) return null
 
     // get all events in this calendarForTimers: 
-     const events = getEvents(calendarForTimers)
-     if(events.length <= 0) return null
+    const events = getEvents(calendarForTimers)
+    if (events.length <= 0) return null
 
     const idTimer = setTimeout(() => {
         //now:
         const now = new Date()
-        for(let i = 0; i < events.length; i++){
+        for (let i = 0; i < events.length; i++) {
             const eventTime = events[i].time
             now.setMinutes(now.getMinutes() + minutes);
-            if(now >= eventTime){
+            if (now >= eventTime) {
                 // mean notification event
                 cb(events[i])
                 break
             }
         }
 
-       return idTimer
+        return idTimer
     }, 1000 * 60 * 5)
 
 }
@@ -115,7 +115,7 @@ const getActiveCalendarWithDate = (inputDate) => {
         calendars.forEach(calendar => {
             const { year, month, date } = Object.values(calendar)[0]
             const calendarDate = new Date(year, month, date)
-            if (isSameDate(inputDate, calendarDate)){
+            if (isSameDate(inputDate, calendarDate)) {
                 activeCalendar = calendar
             }
         })
@@ -125,9 +125,15 @@ const getActiveCalendarWithDate = (inputDate) => {
     return activeCalendar
 }
 
+const copyArray = (arr) => {
+    return JSON.parse(JSON.stringify(arr))
+}
+
 export {
     isSameDate,
     calDayOfWeeks,
     startTimer,
-    getActiveCalendarWithDate
+    getActiveCalendarWithDate,
+    getEvents,
+    copyArray
 }

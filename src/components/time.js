@@ -1,7 +1,8 @@
 import React from 'react'
 
 import { setCalendars, getCalendars } from '../services/localStorage'
-import { isSameDate, calDayOfWeeks, startTimer, getActiveCalendarWithDate } from '../services/funcHelp'
+import { isSameDate, calDayOfWeeks, startTimer, getActiveCalendarWithDate, copyArray } from '../services/funcHelp'
+import {downloadCSV} from '../services/csv'
 
 export default class Time extends React.Component {
 
@@ -35,22 +36,22 @@ export default class Time extends React.Component {
         { hour: 23, content: '' },
     ]
 
+
+
     // init state
     initState = (date, _notes) => ({
         year: date.getFullYear(),
         month: date.getMonth(),
         date: date.getDate(),
         dayOfWeeks: calDayOfWeeks(date),
-        notes: _notes || this.notes //note: [{hour: 0, content: ''}, ...]
+        notes: _notes || copyArray(this.notes) //note: [{hour: 0, content: ''}, ...]
 
     })
 
-
-
-    
-
     constructor(props) {
         super(props)
+
+        localStorage.setItem('calendars', null)
 
         // check today is contain calendar or not
         let activeCalendar = getActiveCalendarWithDate(new Date())
@@ -63,7 +64,7 @@ export default class Time extends React.Component {
         this.idTimer = startTimer(60, this.notification)
     }
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         clearTimeout(this.idTimer)
     }
 
@@ -83,11 +84,11 @@ export default class Time extends React.Component {
         const notes = this.state.notes
         const value = event.target.value
 
-        for(let i = 0; i < notes.length; i++){
-            if(notes[i].hour === index){
+        for (let i = 0; i < notes.length; i++) {
+            if (notes[i].hour === index) {
                 notes[i].content = value
                 break
-            }   
+            }
         }
 
         this.setState({
@@ -98,22 +99,26 @@ export default class Time extends React.Component {
     // click to each date (1-31) or arrow previus or next : will trigger this func
     onDateChange = (_date) => {
         let newState
-        if (_date instanceof Date) {
-            newState = { ...this.state, year: _date.getFullYear(), month: _date.getMonth(), date: _date.getDate() }
-
-        } else {
+        if(_date === '-' || _date === '+'){
+            console.log('this.state ', this.state)
             const { year, month, date } = this.state
+
             const newDate = new Date(year, month, date)
             if (_date === '-') {
                 newDate.setDate(newDate.getDate() - 7)
             } else {
                 newDate.setDate(newDate.getDate() + 7)
             }
-            console.log('newDate ', newDate)
+            // console.log('newDate ', newDate)
 
             newState = { ...this.state, year: newDate.getFullYear(), month: newDate.getMonth(), date: newDate.getDate() }
             console.log('new State ', newState)
+        }else{
+            _date = new Date(_date)
+            newState = { ...this.state, year: _date.getFullYear(), month: _date.getMonth(), date: _date.getDate() }
         }
+
+        
 
         this.updateState(newState, 'date')
     }
@@ -134,7 +139,7 @@ export default class Time extends React.Component {
             }
 
             newState.dayOfWeeks = calDayOfWeeks(currentDate)
-            newState.notes = this.notes
+            newState.notes = copyArray(this.notes)
         }
 
         this.setState(newState)
@@ -147,17 +152,17 @@ export default class Time extends React.Component {
     }
 
     // notification: event have shape: {time: .., message: ''}
-    notification = ({time, message}) => {
-        window.alert( `calendar: ${message}`)
+    notification = ({ time, message }) => {
+        window.alert(`calendar: ${message}`)
     }
 
 
-    
+
 
 
     render() {
         const { year, month, date, dayOfWeeks, notes } = this.state
-        console.log('dayOfWeeks ', dayOfWeeks)
+        // console.log('dayOfWeeks ', dayOfWeeks)
         return (
             <div>
                 <div className="flex-horizontal">
@@ -168,6 +173,7 @@ export default class Time extends React.Component {
                     </select>
                     <input type="number" value={year} onChange={this.onInputChanged} name="year" className="form-control" />
                     <button className="btn btn-success" onClick={this.saveCalendars}>Save</button>
+                    <button className="btn btn-success" onClick={() => downloadCSV({ filename: "calendars.csv" })}>Download CSV</button>
                 </div>
 
                 <table style={{ textAlign: 'center' }}>
