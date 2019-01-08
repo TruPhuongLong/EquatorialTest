@@ -81,22 +81,21 @@ const startTimer = (minutes, cb) => {
     const events = getEvents(calendarForTimers)
     if (events.length <= 0) return null
 
-    const idTimer = setTimeout(() => {
-        //now:
-        const now = new Date()
-        for (let i = 0; i < events.length; i++) {
-            const eventTime = events[i].time
-            now.setMinutes(now.getMinutes() + minutes);
-            if (now >= eventTime) {
-                // mean notification event
-                cb(events[i])
-                break
-            }
+    let arrayOfTimer = []
+    let now = new Date()
+
+    events.forEach(event => {
+        const eventTime = event.time
+        now.setMinutes(now.getMinutes() + minutes);
+        console.log(now)
+        const delta = (eventTime.getTime() - now.getTime())  // delta in miliseconds
+        console.log('will notify after: ', delta / 1000, ' seconds')
+        if (delta > 0) {
+            const idTimer = setTimeout(() => cb(event), delta)
+            arrayOfTimer.push(idTimer)
         }
-
-        return idTimer
-    }, 1000 * 60 * 5)
-
+    })
+    return arrayOfTimer
 }
 
 // input date => get activeCalendar or not

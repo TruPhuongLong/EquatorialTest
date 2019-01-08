@@ -2,7 +2,8 @@ import React from 'react'
 
 import { setCalendars, getCalendars } from '../services/localStorage'
 import { isSameDate, calDayOfWeeks, startTimer, getActiveCalendarWithDate, copyArray } from '../services/funcHelp'
-import {downloadCSV} from '../services/csv'
+import { downloadCSV } from '../services/csv'
+import ulrNotify from '../assets/notify.png'
 
 export default class Time extends React.Component {
 
@@ -61,11 +62,14 @@ export default class Time extends React.Component {
             this.state = this.initState(new Date())
         }
 
-        this.idTimer = startTimer(60, this.notification)
+        this.arrayIdTimer = startTimer(22, this.notification)
+
     }
 
     componentWillUnmount() {
-        clearTimeout(this.idTimer)
+        this.arrayIdTimer.forEach(idTimer => {
+            clearTimeout(this.idTimer)
+        })
     }
 
     // update value when change: month, year
@@ -99,7 +103,7 @@ export default class Time extends React.Component {
     // click to each date (1-31) or arrow previus or next : will trigger this func
     onDateChange = (_date) => {
         let newState
-        if(_date === '-' || _date === '+'){
+        if (_date === '-' || _date === '+') {
             console.log('this.state ', this.state)
             const { year, month, date } = this.state
 
@@ -113,12 +117,12 @@ export default class Time extends React.Component {
 
             newState = { ...this.state, year: newDate.getFullYear(), month: newDate.getMonth(), date: newDate.getDate() }
             console.log('new State ', newState)
-        }else{
+        } else {
             _date = new Date(_date)
             newState = { ...this.state, year: _date.getFullYear(), month: _date.getMonth(), date: _date.getDate() }
         }
 
-        
+
 
         this.updateState(newState, 'date')
     }
@@ -153,7 +157,20 @@ export default class Time extends React.Component {
 
     // notification: event have shape: {time: .., message: ''}
     notification = ({ time, message }) => {
-        window.alert(`calendar: ${message}`)
+        if (Notification.permission !== "granted")
+            Notification.requestPermission();
+        else {
+            var notification = new Notification('calendar notified!', {
+                icon: ulrNotify,
+                body: `${time} \n ${message}`,
+            });
+
+            notification.onclick = function () {
+                window.open("http://localhost:3000");
+            };
+
+        }
+
     }
 
 
